@@ -1,0 +1,21 @@
+account_id,account_name,mrr,plan_name,subscription_status,failed_payment_count_last_30d,days_since_last_login,open_support_tickets,contract_end_date
+ACC-001,Acme Corp,2500,enterprise,active,0,5,0,2027-03-01
+ACC-002,Bright Solutions,850,professional,active,3,12,1,2026-09-15
+ACC-003,CloudNine Ltd,120,starter,past_due,1,45,2,2026-07-01
+ACC-004,DataPulse Inc,4200,enterprise,active,0,3,0,2027-06-30
+ACC-005,Echo Systems,680,professional,active,2,18,0,2026-08-20
+ACC-006,FrontRunner Co,95,starter,active,0,60,4,2026-07-28
+ACC-007,Greenfield Tech,1800,professional,active,0,7,0,2027-01-15
+ACC-008,Harbor Analytics,3100,enterprise,paused,0,22,3,2026-06-30
+ACC-009,Ironclad SaaS,310,starter,active,4,9,0,2026-10-01
+ACC-010,JetStream Corp,760,professional,active,0,33,1,2026-12-01
+ACC-011,Keystone Digital,5500,enterprise,active,0,2,0,2027-09-01
+ACC-012,Luminary Works,430,professional,past_due,2,55,5,2026-07-10
+ACC-013,MapleSoft,190,starter,active,0,14,0,2026-11-15
+ACC-014,NorthBridge Inc,920,professional,active,1,8,0,2026-08-01
+ACC-015,OmniTrack,2800,enterprise,active,0,4,1,2026-07-20
+ACC-016,Pinnacle Group,640,professional,canceled,0,90,0,2026-06-01
+ACC-017,QuickSpark LLC,155,starter,active,3,41,2,2026-09-30
+ACC-018,RedShift Co,3700,enterprise,active,0,6,0,2027-04-15
+ACC-019,Silverline HQ,510,professional,active,2,28,3,2026-07-05
+ACC-020,TowerPoint Inc,880,professional,active,0,11,0,2027-02-28
