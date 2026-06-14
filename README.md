@@ -35,7 +35,7 @@ cat data/sample_accounts.csv | node src/pipeline.js
 
 ## Sample data
 
-`data/sample_accounts.csv` has 20 fictional accounts. Each row has these fields:
+`data/sample_accounts.csv` has 20 accounts. Each row has these fields:
 
 ```
 account_id, account_name, mrr, plan_name, subscription_status,
