@@ -73,7 +73,7 @@ Respond with ONLY the briefing text between these exact markers — no other tex
      */
 
     // Using agy CLI (Gemini) — authenticated via ~/.gemini/settings.json, no API key in env needed
-    const geminiCall = await execFile('agy', ['--print', prompt], { encoding: 'utf8', timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+    const geminiCall = await execFile('agy', ['--print', prompt], { encoding: 'utf8', timeout: 180000, maxBuffer: 10 * 1024 * 1024 });
 
     const briefing = extractBriefing(geminiCall.stdout);
     logger.info({ briefing }, 'SUCCESS: gemini analyse briefing');

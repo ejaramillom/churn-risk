@@ -2,6 +2,7 @@ require('dotenv').config();
 const { readCsv, processWithThrottle } = require('./csvReader');
 const { scoreAll } = require('./scorer');
 const { analyseBriefing } = require('./llm');
+const { postBriefing } = require('./slack');
 
 // we will see this everywhere as at some point i needed the error tooling to evolve independently
 // when moving to a structured logging solution, this would be unified in a middleware or class
@@ -58,6 +59,10 @@ async function handler() {
         logger.info('-------------------');
 
         // 4. Post formatted briefing to Slack (slack)
+        await postBriefing(briefing);
+        logger.info('-------------------');
+        logger.info('Slack briefing posted');
+        logger.info('-------------------');
 
     } catch (error) {
         logger.error({ err: error.message }, 'Pipeline failed');
