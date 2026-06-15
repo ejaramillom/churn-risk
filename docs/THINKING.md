@@ -37,3 +37,27 @@ A signal fires when a threshold is crossed on a single account field.
 Accounts with a missing `account_id` are logged as errors and excluded — we cannot report on an account we cannot identify.
 
 Accounts with a missing `contract_end_date` skip the `contract_ending` check but are still scored on all other signals.
+## LLM briefing step
+
+### What it does
+
+After scoring, at-risk accounts are passed to `analyseBriefing()` in `src/llm.js`. A single prompt is built listing all at-risk accounts with their tier, MRR, and signals. One LLM call returns a plain-English paragraph per account — CS-readable output for the Monday briefing.
+
+### Provider journey
+
+**OpenAI via OpenRouter (attempted, blocked)**
+
+We tried routing through OpenRouter pointing at `gpt-4o-mini`. The call was structurally correct — same axios pattern used in the `interaction-analyzer` project (`https://github.com/ejaramillom/interaction-analyzer`) which worked against a paid OpenAI account.
+
+Blocked by quota exhaustion (OpenRouter account not funded):
+
+```json
+{"level":50,"timestamp":"2026-06-15T16:45:20.202Z","pid":281487,"hostname":"emmanuel",
+ "err":"Request failed with status code 429","status":429,
+ "detail":{"error":{"message":"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.",
+ "type":"insufficient_quota","param":null,"code":"insufficient_quota"}},"msg":"LLM call failed"}
+```
+
+**Claude CLI (current)**
+
+Since we pay for Claude, the simplest path is calling the `claude` CLI subprocess (`claude -p "<prompt>"`). No API key wiring, no new deps — `child_process.spawnSync` from stdlib. This is a local dev example; a production path would use the Anthropic SDK directly.
