@@ -14,6 +14,7 @@ function daysUntil(dateStr) {
   const target = new Date(dateStr);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
   return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
 }
 
@@ -38,12 +39,14 @@ function tier(triggered, account) {
   if (triggered.length === 0) return null;
   if (triggered.length >= 2)  return 'HIGH';
   if (triggered.includes('bad_status') && account.mrr >= CONTRACT_MRR_FLOOR) return 'HIGH';
+
   return 'MEDIUM';
 }
 
 function score(account) {
   if (!account.account_id) {
     logger.error('Skipping row — missing account_id');
+
     return null;
   }
 
@@ -56,6 +59,7 @@ function score(account) {
   }
 
   logger.info({ account_id: account.account_id, tier: riskTier, signals: triggered }, 'At-risk account scored');
+
   return { ...account, signals: triggered, tier: riskTier };
 }
 
@@ -67,6 +71,7 @@ function scoreAll(accounts) {
   logger.info(`-------------------`);
   logger.info(`${results.length} at-risk accounts identified`);
   logger.info(`-------------------`);
+
   return results;
 }
 
