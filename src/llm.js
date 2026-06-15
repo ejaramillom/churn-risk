@@ -1,6 +1,8 @@
 'use strict';
 
-const { spawnSync } = require('node:child_process');
+const { execFile: _execFile } = require('node:child_process');
+const { promisify } = require('node:util');
+const execFile = promisify(_execFile);
 const pino = require('pino');
 const logger = pino({
     level: 'info',
@@ -71,12 +73,7 @@ Respond with ONLY the briefing text between these exact markers — no other tex
      */
 
     // Using agy CLI (Gemini) — authenticated via ~/.gemini/settings.json, no API key in env needed
-    const geminiCall = spawnSync('agy', ['--print', prompt], { encoding: 'utf8', timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
-
-    if (geminiCall.status !== 0) {
-        logger.error({ stderr: geminiCall.stderr, stdout: geminiCall.stdout?.slice(0, 300), status: geminiCall.status, error: geminiCall.error?.code }, 'LLM call failed');
-        process.exit(1);
-    }
+    const geminiCall = await execFile('agy', ['--print', prompt], { encoding: 'utf8', timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
 
     const briefing = extractBriefing(geminiCall.stdout);
     logger.info({ briefing }, 'SUCCESS: gemini analyse briefing');

@@ -61,3 +61,40 @@ Blocked by quota exhaustion (OpenRouter account not funded):
 **Claude CLI (current)**
 
 Since we pay for Claude, the simplest path is calling the `claude` CLI subprocess (`claude -p "<prompt>"`). No API key wiring, no new deps — `child_process.spawnSync` from stdlib. This is a local dev example; a production path would use the Anthropic SDK directly.
+
+## Current pipeline state (as of CHU-013)
+
+All four steps are designed; steps 1–3 are wired and working end to end. Step 4 (Slack) is the next commit.
+
+### Running each step independently
+
+```bash
+# Full pipeline — CSV → score → LLM briefing
+node src/pipeline.js --file data/sample_accounts.csv
+
+# Scorer only — skips LLM, fast feedback on signal logic
+node src/scorer.js --file data/sample_accounts.csv
+
+# CSV reader only — validates parse + normalisation
+node src/csvReader.js --file data/sample_accounts.csv
+
+# Pipe mode (any step that accepts stdin)
+cat data/sample_accounts.csv | node src/pipeline.js
+cat data/sample_accounts.csv | node src/scorer.js
+```
+
+### Edge case inputs
+
+```bash
+# Missing account_id — should log error per row and skip
+node src/pipeline.js --file data/missing_account_id.csv
+
+# Missing fields — MRR defaults to 0, date check skipped per row
+node src/pipeline.js --file data/missing_fields.csv
+```
+
+### LLM provider notes
+
+`src/llm.js` calls `agy` (Gemini CLI) via `util.promisify(execFile)` — async, non-blocking, so log order is preserved. The prompt requests output between `===BRIEFING===` / `===END===` markers; `extractBriefing()` clips that section and discards the rest (Gemini goes agentic without constraints, producing verbose summaries we don't want).
+
+Production path would replace `agy` with a direct Gemini or Anthropic API call. The OpenRouter attempt is documented in the commented block in `src/llm.js`.
