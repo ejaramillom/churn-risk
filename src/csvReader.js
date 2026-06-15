@@ -6,7 +6,7 @@ const { finished } = require('node:stream/promises');
 const pino = require('pino');
 const logger = pino({
   level: 'info',
-  timestamp: () => `",timestamp":"${new Date(Date.now()).toISOString()}"`
+  timestamp: () => `",timestamp":"${new Date().toISOString()}"`
 });
 
 function normalise(row) {

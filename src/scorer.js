@@ -3,7 +3,7 @@
 const pino = require('pino');
 const logger = pino({
   level: 'info',
-  timestamp: () => `",timestamp":"${new Date(Date.now()).toISOString()}"`
+  timestamp: () => `",timestamp":"${new Date().toISOString()}"`
 });
 
 const RISK_STATUSES = new Set(['past_due', 'paused', 'canceled']);

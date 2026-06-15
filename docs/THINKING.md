@@ -1,36 +1,39 @@
-# How we decide an account is at risk
+# How churn risk scoring works
 
-## The signals
+## The problem
 
-An account gets flagged if it hits any of these:
+Customer success runs a Monday briefing: which accounts are at risk of churning this week? Right now that means manually scanning a spreadsheet. This pipeline automates that read.
 
-| Signal | Threshold | Why |
-|---|---|---|
-| Failed payments in the last 30 days | 2 or more | One failure can be an expired card. Two means the billing issue is still unresolved. |
-| Days since last login | 30 or more | If nobody has opened the product in a month, it's probably not in their workflow anymore. |
-| Open support tickets | 3 or more | Repeated unresolved problems tend to lead to cancellations. |
-| Subscription status | `past_due`, `paused`, or `canceled` | The billing system is already telling us something is wrong. |
-| Contract ending soon | Within 45 days, and MRR $500+ | High-value accounts approaching renewal need a heads-up. |
+## Risk signals
 
-## High vs Medium
+A signal fires when a threshold is crossed on a single account field.
 
-- **HIGH** — 2 or more signals, or a bad billing status on a paying account.
-- **MEDIUM** — exactly 1 signal.
+| Signal | Condition |
+|---|---|
+| `failed_payments` | 2 or more failed payments in the last 30 days |
+| `login_gap` | No login in 30 or more days |
+| `support_tickets` | 3 or more open support tickets |
+| `bad_status` | Subscription is `past_due`, `paused`, or `canceled` |
+| `contract_ending` | Contract ends within 45 days and MRR ≥ $500 |
 
-Very low-MRR accounts with only one weak signal are skipped — the cost of a CS outreach isn't worth it.
+## Risk tier
 
-## What the LLM is for
+| Tier | Condition |
+|---|---|
+| `HIGH` | 2 or more signals, or `bad_status` alone on a paying account (MRR ≥ $500) |
+| `MEDIUM` | 1 signal, and not the HIGH shortcut above |
+| healthy | 0 signals — account is excluded from the briefing |
 
-The rules above decide *whether* an account is at risk. The LLM decides *how to say it* — it turns the raw signals into 2–3 sentences that read like a real analyst wrote them, not a list of database fields.
+## Why these thresholds
 
-## Known gaps
+- **2 failed payments**: one missed payment can be a card expiry. Two in 30 days is a pattern.
+- **30 day login gap**: a month of silence is a strong disengagement signal, regardless of plan size.
+- **3 support tickets**: noise below that threshold; above it suggests unresolved friction.
+- **45 day contract window**: enough lead time for CS to have a meaningful renewal conversation.
+- **$500 MRR floor on contract_ending**: low-MRR accounts on short contracts are expected to churn — not worth escalating.
 
-- Login gap is a lagging signal — an account can be quietly disengaged for months before it crosses the 30-day mark.
-- Ticket count doesn't tell us severity — 3 minor UI questions is not the same as 1 billing blocker.
-- The 45-day contract window and $500 MRR floor are guesses. In production these should be tuned against historical churn data.
+## What gets skipped
 
-## What we'd improve in production
+Accounts with a missing `account_id` are logged as errors and excluded — we cannot report on an account we cannot identify.
 
-1. Score signals differently — a failed payment should weigh more than a login gap.
-2. Use trends, not snapshots — MRR declining over 3 months is a much stronger signal than a single low number.
-3. Pull ticket category, not just count.
+Accounts with a missing `contract_end_date` skip the `contract_ending` check but are still scored on all other signals.

@@ -1,9 +1,10 @@
 require('dotenv').config();
-const { readCsv } = require('./csvReader');
+const { readCsv, processWithThrottle } = require('./csvReader');
+const { scoreAll } = require('./scorer');
 const pino = require('pino');
 const logger = pino({
     level: 'info',
-    timestamp: () => `",timestamp":"${new Date(Date.now()).toISOString()}"`
+    timestamp: () => `",timestamp":"${new Date().toISOString()}"`
 });
 
 // i keep defaulting to the orchestrator/pipeline pattern for automation processes
@@ -37,9 +38,10 @@ async function handler() {
         const input = resolveInput();
 
         // 1. Read and parse CSV
-        await readCsv(input);
+        const accounts = await readCsv(input);
 
         // 2. Score accounts (scorer)
+        const atRisk = scoreAll(accounts);
 
         // 3. Generate LLM risk assessments per account (llm)
 
