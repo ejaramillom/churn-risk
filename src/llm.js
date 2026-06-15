@@ -7,30 +7,31 @@ const logger = pino({
     timestamp: () => `",timestamp":"${new Date().toISOString()}"`
 });
 
-async function analyseAccount(account) {
-    const { account_id, account_name, mrr, signals, tier } = account;
-    const prompt = `You are a customer success analyst. Write 2-3 sentences of plain-English insight about why this account is at risk. Sound like a real analyst, not a field dump.\n\nAccount: ${account_name} (${tier} tier), MRR $${mrr}. Risk signals: ${signals}.`;
+async function analyseBriefing(atRisk) {
+    const accountLines = atRisk
+        .map(({ account_name, tier, mrr, signals }) => `- ${account_name} (${tier} tier, MRR $${mrr}): ${signals}`)
+        .join('\n');
 
-    try {
-        const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 150,
-            temperature: 0.2,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-            }
-        });
+    const prompt = `You are a CS analyst writing the Monday churn briefing. For each account below, write 1-2 sentences of plain-English insight. Label each entry with the account name.\n\n${accountLines}`;
 
-        const result = response.data.choices[0].message.content.trim();
-        logger.info({ account_id, analysis: result }, 'SUCCESS: analyseAccount');
-        return result;
-    } catch (error) {
-        logger.error({ account_id, err: error.message }, 'LLM call failed');
+    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 800,
+        temperature: 0.2,
+    }, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        }
+    }).catch(error => {
+        logger.error({ err: error.message }, 'LLM call failed');
         process.exit(1);
-    }
+    });
+
+    const result = response.data.choices[0].message.content.trim();
+    logger.info({ briefing: result }, 'SUCCESS: analyseBriefing');
+    return result;
 }
 
-module.exports = { analyseAccount };
+module.exports = { analyseBriefing };
