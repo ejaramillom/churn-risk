@@ -2,6 +2,13 @@ require('dotenv').config();
 const { readCsv, processWithThrottle } = require('./csvReader');
 const { scoreAll } = require('./scorer');
 const { analyseBriefing } = require('./llm');
+
+// we will see this everywhere as at some point i needed the error tooling to evolve independently
+// when moving to a structured logging solution, this would be unified in a middleware or class
+// taking care of all the possible uses
+// but for now i just wired it in each independent domain
+// pipeline, scorer, csvReader and llm calls, and slack middleware too
+
 const pino = require('pino');
 const logger = pino({
     level: 'info',
@@ -16,7 +23,7 @@ const logger = pino({
 // but it works like a charm on automation so i prefer it
 
 // if no file is passed then we return an error
-const resolveInput = () => {
+function resolveInput() {
     const fileFlagIndex = process.argv.indexOf('--file');
     const filePath = process.argv[fileFlagIndex + 1];
 

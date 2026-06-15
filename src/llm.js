@@ -21,7 +21,7 @@ async function analyseBriefing(atRisk) {
      *   POST https://openrouter.ai/api/v1/chat/completions
      *   model: 'gpt-4o-mini'
      *
-     * Got HTTP 429 / insufficient_credits — account not funded.
+     * Got HTTP 429 / insufficient_credits as i did not fund the account.
      *
      * Exact error log from the run:
      * {"level":50,"timestamp":"2026-06-15T16:45:20.202Z","pid":281487,"hostname":"emmanuel",
@@ -52,17 +52,17 @@ async function analyseBriefing(atRisk) {
      * const result = response.data.choices[0].message.content.trim();
      */
 
-    // Using claude CLI (subprocess) — paid account available locally, no API key needed
-    const proc = spawnSync('claude', ['-p', prompt], { encoding: 'utf8' });
+    // Using agy CLI (Gemini) — authenticated via ~/.gemini/settings.json, no API key in env needed
+    const claudeCall = spawnSync('agy', ['--print', prompt], { encoding: 'utf8', timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
 
-    if (proc.status !== 0) {
-        logger.error({ stderr: proc.stderr, status: proc.status }, 'LLM call failed');
+    if (claudeCall.status !== 0) {
+        logger.error({ stderr: claudeCall.stderr, stdout: claudeCall.stdout?.slice(0,300), status: claudeCall.status, error: claudeCall.error?.code }, 'LLM call failed');
         process.exit(1);
     }
 
-    const result = proc.stdout.trim();
-    logger.info({ briefing: result }, 'SUCCESS: analyseBriefing');
-    return result;
+    const reasoning = claudeCall.stdout.trim();
+    logger.info({ briefing: reasoning }, 'SUCCESS: analyseBriefing');
+    return reasoning;
 }
 
 module.exports = { analyseBriefing };
