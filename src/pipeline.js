@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { readCsv, processWithThrottle } = require('./csvReader');
 const { scoreAll } = require('./scorer');
+const { analyseAccount } = require('./llm');
 const pino = require('pino');
 const logger = pino({
     level: 'info',
@@ -44,6 +45,10 @@ async function handler() {
         const atRisk = scoreAll(accounts);
 
         // 3. Generate LLM risk assessments per account (llm)
+        const assessments = await Promise.all(atRisk.map(analyseAccount));
+        logger.info('-------------------');
+        logger.info(`${assessments.length} LLM assessments generated`);
+        logger.info('-------------------');
 
         // 4. Post formatted briefing to Slack (slack)
 

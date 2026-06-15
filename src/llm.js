@@ -25,7 +25,7 @@ async function analyseAccount(account) {
         });
 
         const result = response.data.choices[0].message.content.trim();
-        logger.info({ account_id, preview: result.substring(0, 30) }, 'SUCCESS: analyseAccount');
+        logger.info({ account_id, analysis: result }, 'SUCCESS: analyseAccount');
         return result;
     } catch (error) {
         logger.error({ account_id, err: error.message }, 'LLM call failed');
