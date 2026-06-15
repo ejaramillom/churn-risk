@@ -1,0 +1,3 @@
+account_id,account_name,mrr,plan_name,subscription_status,failed_payment_count_last_30d,days_since_last_login,open_support_tickets,contract_end_date
+,Unnamed Corp,500,starter,past_due,3,45,0,2026-07-01
+ACC-021,Valid Account,800,professional,active,0,5,0,2027-01-01

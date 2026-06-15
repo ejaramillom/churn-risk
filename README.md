@@ -4,14 +4,16 @@ Automates the RevOps Monday churn briefing. You give it a CSV of accounts, it te
 
 ## What it does right now
 
-Reads a CSV file, parses each account row, and prints how many accounts were loaded.
+Reads a CSV, scores each account against risk rules, and prints which ones are at risk and why.
 
 ```
-Loaded 20 accounts from data/sample_accounts.csv.
-Next: scorer → llm → slack.
+Scoring 20 accounts
+At-risk account scored — account_id: ACC-003, tier: HIGH, signals: [bad_status, login_gap]
+...
+6 at-risk accounts identified
 ```
 
-Coming next: score each account against risk rules → generate a plain-English summary via Claude → post to Slack.
+Coming next: generate a plain-English summary via Claude → post to Slack.
 
 ## Install
 
@@ -33,17 +35,29 @@ Or pipe a CSV directly:
 cat data/sample_accounts.csv | node src/pipeline.js
 ```
 
+### Run scorer standalone
+
+To score accounts without running the full pipeline:
+
+```bash
+node src/scorer.js --file data/sample_accounts.csv
+```
+
 ## Sample data
 
-`data/sample_accounts.csv` has 20 accounts. Each row has these fields:
+| File | What it tests |
+|---|---|
+| `data/sample_accounts.csv` | 20 mixed accounts — healthy and at-risk |
+| `data/missing_account_id.csv` | Row with blank account_id — should log error and skip |
+| `data/missing_fields.csv` | Rows with missing MRR, date, and all fields empty |
+
+Each row has these fields:
 
 ```
 account_id, account_name, mrr, plan_name, subscription_status,
 failed_payment_count_last_30d, days_since_last_login,
 open_support_tickets, contract_end_date
 ```
-
-The accounts are a mix of healthy and at-risk so you can see the scorer work when that step is added.
 
 ## Environment variables
 

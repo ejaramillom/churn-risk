@@ -1,0 +1,4 @@
+account_id,account_name,mrr,plan_name,subscription_status,failed_payment_count_last_30d,days_since_last_login,open_support_tickets,contract_end_date
+ACC-030,NoMrr Corp,,professional,active,2,35,0,2026-07-20
+ACC-031,NoDate Corp,1200,professional,active,0,5,0,
+ACC-032,AllEmpty,,,,,,,
