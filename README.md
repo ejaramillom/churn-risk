@@ -70,6 +70,7 @@ cp .env.example .env
 | Variable | Used in | What it is |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Step 3 | Claude API key |
+| `OPENAI_API_KEY` | Step 3 | OpenAI API key |
 | `SLACK_WEBHOOK_URL` | Step 4 | Incoming webhook for the CS Slack channel |
 
 ## How the at-risk logic works
