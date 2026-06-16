@@ -37,6 +37,7 @@ A signal fires when a threshold is crossed on a single account field.
 Accounts with a missing `account_id` are logged as errors and excluded — we cannot report on an account we cannot identify.
 
 Accounts with a missing `contract_end_date` skip the `contract_ending` check but are still scored on all other signals.
+
 ## LLM briefing step
 
 ### What it does
@@ -47,29 +48,41 @@ After scoring, at-risk accounts are passed to `analyseBriefing()` in `src/llm.js
 
 **OpenAI via OpenRouter (attempted, blocked)**
 
-We tried routing through OpenRouter pointing at `gpt-4o-mini`. The call was structurally correct — same axios pattern used in the `interaction-analyzer` project (`https://github.com/ejaramillom/interaction-analyzer`) which worked against a paid OpenAI account.
+We tried routing through OpenRouter pointing at `gpt-4o-mini`. The call was structurally correct — same axios pattern used in the `interaction-analyzer` project which worked against a paid OpenAI account.
 
 Blocked by quota exhaustion (OpenRouter account not funded):
 
 ```json
 {"level":50,"timestamp":"2026-06-15T16:45:20.202Z","pid":281487,"hostname":"emmanuel",
  "err":"Request failed with status code 429","status":429,
- "detail":{"error":{"message":"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.",
+ "detail":{"error":{"message":"You exceeded your current quota, please check your plan and billing details.",
  "type":"insufficient_quota","param":null,"code":"insufficient_quota"}},"msg":"LLM call failed"}
 ```
 
-**Claude CLI (current)**
+**agy / Gemini CLI (attempted, abandoned)**
 
-Since we pay for Claude, the simplest path is calling the `claude` CLI subprocess (`claude -p "<prompt>"`). No API key wiring, no new deps — `child_process.spawnSync` from stdlib. This is a local dev example; a production path would use the Anthropic SDK directly.
+We wired `agy --print <prompt>` via `execFile`. The call worked structurally but `agy` was timing out consistently even at 5 minutes. Gemini also requires funded credits and goes agentic without strict output constraints — producing verbose summaries we had to clip with `===BRIEFING===` markers anyway.
 
-## Current pipeline state (as of CHU-013)
+**Ollama qwen3:8b (current)**
 
-All four steps are designed; steps 1–3 are wired and working end to end. Step 4 (Slack) is the next commit.
+We switched to Ollama running locally. No API key, no external network call, no timeout issues from remote infrastructure. `fetch` is built into Node 18 so no extra dependencies. `qwen3:8b` is fast enough for a briefing and costs nothing to run.
+
+The prompt still uses `===BRIEFING===` / `===END===` markers and `extractBriefing()` clips to that section — qwen3 follows the constraint well.
+
+```
+node src/pipeline.js --file data/sample_accounts.csv
+```
+
+Full run: CSV read + scoring + Ollama briefing + Slack post completes in under 2 minutes on a local machine with the model already loaded.
+
+## Current pipeline state
+
+All four steps are wired and working end to end.
 
 ### Running each step independently
 
 ```bash
-# Full pipeline — CSV → score → LLM briefing
+# Full pipeline — CSV → score → LLM briefing → Slack
 node src/pipeline.js --file data/sample_accounts.csv
 
 # Scorer only — skips LLM, fast feedback on signal logic
@@ -92,9 +105,3 @@ node src/pipeline.js --file data/missing_account_id.csv
 # Missing fields — MRR defaults to 0, date check skipped per row
 node src/pipeline.js --file data/missing_fields.csv
 ```
-
-### LLM provider notes
-
-`src/llm.js` calls `agy` (Gemini CLI) via `util.promisify(execFile)` — async, non-blocking, so log order is preserved. The prompt requests output between `===BRIEFING===` / `===END===` markers; `extractBriefing()` clips that section and discards the rest (Gemini goes agentic without constraints, producing verbose summaries we don't want).
-
-Production path would replace `agy` with a direct Gemini or Anthropic API call. The OpenRouter attempt is documented in the commented block in `src/llm.js`.

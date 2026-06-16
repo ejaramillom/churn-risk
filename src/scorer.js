@@ -6,6 +6,16 @@ const logger = pino({
   timestamp: () => `",timestamp":"${new Date().toISOString()}"`
 });
 
+// in some other implementations i have used sentimental analysis libraries or even powerful ML models
+// to declare deterministic results
+// this is an example (arbitrary selections by Claude)
+// but the big deal is the fact that some tasks could be either elaborated via a
+// software, rather than delegating such responsibility to an expensive agent
+
+// if thats not the case and we want to use generalist llms
+// this scorer could be dumped and all analysis sent each row at the time to the llms
+
+
 const RISK_STATUSES = new Set(['past_due', 'paused', 'canceled']);
 const CONTRACT_WINDOW_DAYS = 45;
 const CONTRACT_MRR_FLOOR = 500;

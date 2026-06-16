@@ -11,6 +11,7 @@ async function postBriefing(briefing) {
             logger.error({ err: error.response?.data || error.message }, 'Slack post failed');
             process.exit(1);
         });
+    // logging only the last 10 chars so the webhook secret never lands in logs
     logger.info({ channel: process.env.SLACK_WEBHOOK_URL?.slice(-10) }, 'SUCCESS: postBriefing');
 }
 

@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { readCsv, processWithThrottle } = require('./csvReader');
+const { readCsv } = require('./csvReader');
 const { scoreAll } = require('./scorer');
 const { analyseBriefing } = require('./llm');
 const { postBriefing } = require('./slack');
@@ -48,21 +48,33 @@ async function handler() {
 
         // 1. Read and parse CSV
         const accounts = await readCsv(input);
+        logger.info('----------------------------------------------------------------------------------');
+        logger.info('1. Csv file read');
+        logger.info('----------------------------------------------------------------------------------');
 
         // 2. Score accounts (scorer)
         const atRisk = scoreAll(accounts);
+        logger.info('----------------------------------------------------------------------------------');
+        logger.info('2. Scores generated');
+        logger.info('----------------------------------------------------------------------------------');
 
         // 3. Generate LLM risk assessments per account (llm)
-        const briefing = await analyseBriefing(atRisk);
-        logger.info('-------------------');
-        logger.info(`LLM briefing generated`);
-        logger.info('-------------------');
+        let briefing;
+        try {
+            briefing = await analyseBriefing(atRisk);
+            logger.info('----------------------------------------------------------------------------------');
+            logger.info('3. LLM briefing generated');
+            logger.info('----------------------------------------------------------------------------------');
+        } catch (llmError) {
+            logger.error({ err: llmError.message }, 'LLM step failed, posting error briefing to Slack');
+            briefing = `⚠️ LLM briefing failed: ${llmError.message}`;
+        }
 
         // 4. Post formatted briefing to Slack (slack)
         await postBriefing(briefing);
-        logger.info('-------------------');
-        logger.info('Slack briefing posted');
-        logger.info('-------------------');
+        logger.info('----------------------------------------------------------------------------------');
+        logger.info('4. Slack briefing posted');
+        logger.info('----------------------------------------------------------------------------------');
 
     } catch (error) {
         logger.error({ err: error.message }, 'Pipeline failed');

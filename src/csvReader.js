@@ -9,6 +9,8 @@ const logger = pino({
   timestamp: () => `",timestamp":"${new Date().toISOString()}"`
 });
 
+// csv parser returns every field as a string so we coerce numbers here
+// missing or malformed values default to 0 rather than NaN to keep scoring predictable
 function normalise(row) {
   return {
     account_id:                    row.account_id,
@@ -37,21 +39,6 @@ async function streamToRows(source) {
   return rows;
 }
 
-async function processWithThrottle(rows, fn) {
-  const results = [];
-  for (const row of rows) {
-    logger.info({ account_id: row.account_id }, `Processing row`);
-    try {
-      const result = await fn(row);
-      results.push(result);
-    } catch (error) {
-      logger.error({ err: error.message }, `Row ${row.account_id} failed — skipping`);
-      results.push({ ...row, error: error.message });
-    }
-  }
-  return results;
-}
-
 async function readCsv(input) {
   if (input.type !== 'file') return streamToRows(process.stdin);
   if (!fs.existsSync(input.path)) {
@@ -61,4 +48,4 @@ async function readCsv(input) {
   return streamToRows(fs.createReadStream(input.path));
 }
 
-module.exports = { readCsv, processWithThrottle };
+module.exports = { readCsv };
